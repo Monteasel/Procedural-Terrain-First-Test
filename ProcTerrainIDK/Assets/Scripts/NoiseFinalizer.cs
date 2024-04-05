@@ -7,56 +7,38 @@ using UnityEngine;
 public class NoiseFinalizer : MonoBehaviour
 {
     public enum SampleMode { FromNoise, FromImage };
-    public enum DrawMode { DrawHeightMap, DrawColorMap, Whitebeard, DrawMesh };
+    public enum DrawMode { DrawHeightMap, DrawColorMap, DrawMesh };
 
-    public SampleMode sampleMode;
-    public Texture2D imageSample;
     public DrawMode drawMode;
 
     public const int mapChunkSize = 241;
-    [Range(0,6)]
-    public int levelOfDetail;
-    public float scale;
+    [Range(0, 6)]
+    public int levelOfDetail = 0;
+    public float scale = 20f;
 
-    public int octaves;
+    public int octaves = 3;
     [Range(0f, 1f)]
-    public float persistance;
-    public float lacunarity;
+    public float persistance = 0.5f;
+    public float lacunarity = 2;
 
-    public int seed;
+    public int seed = 1024;
     public Vector2 offset;
 
-    public float meshHeightMultiplier;
-    public AnimationCurve meshHeightCurve;
+    public float meshHeightMultiplier = 12;
+    public AnimationCurve meshHeightCurve = AnimationCurve.Linear(0f,0f,1f,1f);
 
-    public bool autoUpdate;
+    public bool autoUpdate = true;
 
     public Terrain[] terrain;
     public void GenerateMap()
     {
         float[,] heightMap = null;
-        if (sampleMode == SampleMode.FromNoise)
-        {
-            heightMap = NoiseMapGenerator.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, scale, octaves, persistance, lacunarity, offset);
-        }
-        else if(sampleMode == SampleMode.FromImage)
-        {
-            float[,] imageHeightMap = new float[imageSample.width, imageSample.height];
-            for(int y = 0; y < imageSample.height; y++)
-            {
-                for(int x = 0; x < imageSample.width; x++)
-                {
-                    imageHeightMap[x, y] = imageSample.GetPixel(x, y).r;
-                }
-            }
-            heightMap = imageHeightMap;
-        }
+        heightMap = NoiseMapGenerator.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, scale, octaves, persistance, lacunarity, offset);
 
         Color[] colorMap = new Color[mapChunkSize * mapChunkSize];
 
-        Color[] terrainTextureColorMap = new Color[mapChunkSize * mapChunkSize];
 
-        /*for(int y = 0; y < mapChunkSize; y++)
+        for (int y = 0; y < mapChunkSize; y++)
         {
             for (int x = 0; x < mapChunkSize; x++)
             {
@@ -67,28 +49,22 @@ public class NoiseFinalizer : MonoBehaviour
                     {
                         colorMap[y * mapChunkSize + x] = terrain[i].color;
 
-                        terrainTextureColorMap[y * mapChunkSize + x] = terrain[i].texture.GetPixel(x,y);
-                        
                         break;
                     }
                 }
             }
-        }*/
+        }
         DisplayMap display = FindObjectOfType<DisplayMap>();
 
-        if(drawMode == DrawMode.DrawHeightMap)
+        if (drawMode == DrawMode.DrawHeightMap)
         {
             display.DrawTexture(TextureGenerator.TextureFromHeightMap(heightMap));
         }
-        else if(drawMode == DrawMode.DrawColorMap)
+        else if (drawMode == DrawMode.DrawColorMap)
         {
             display.DrawTexture(TextureGenerator.TextureFromColorMap(colorMap, mapChunkSize, mapChunkSize));
         }
-        else if(drawMode == DrawMode.Whitebeard)
-        {
-            display.DrawTexture(TextureGenerator.TextureFromColorMap(terrainTextureColorMap, mapChunkSize, mapChunkSize));
-        }
-        else if(drawMode == DrawMode.DrawMesh)
+        else if (drawMode == DrawMode.DrawMesh)
         {
             display.DrawMesh(MeshGenerator.GenerateMesh(heightMap, meshHeightMultiplier, meshHeightCurve, levelOfDetail), TextureGenerator.TextureFromColorMap(colorMap, mapChunkSize, mapChunkSize));
         }
@@ -98,7 +74,7 @@ public class NoiseFinalizer : MonoBehaviour
     {
         if (octaves < 0)
             octaves = 0;
-        if(lacunarity < 1)
+        if (lacunarity < 1)
             lacunarity = 1;
     }
 
